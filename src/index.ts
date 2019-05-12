@@ -4,6 +4,7 @@ import { Basemap } from "./basemap";
 import BasemapRoadItem from "./basemap/roadItem";
 import { BuildingManager } from "./building/manager";
 import BasemapBuildingItem from "./basemap/buildingItem";
+import { SynchronizationData } from "./def";
 
 class Var {
     static id: number = 0
@@ -42,6 +43,9 @@ class WebSocket {
             const msgData = JSON.parse(msg.data)
             console.log(`[Socket] receive ${msg.data}.`)
             const { type, data } = msgData
+            if (type == "Message" && data.info == "Data required") {
+                this.socket.send(new SynchronizationData(basemap.export()).toString())
+            }
 
             if (type == "Synchronization Data") {
                 const lastVar = last
@@ -51,7 +55,7 @@ class WebSocket {
                 const triggerMainLoop = () => {
                     if (!lastVar.done) setTimeout(triggerMainLoop, 0)
                     else {
-                        console.log(`begin to resolve msg ${data.info}`)
+                        console.log(`[Socker] begin to check data validation.`)
                         const resolve = (): Promise<boolean> => {
                             return new Promise((resolve, reject) => {
                                 if (data.roads != null) {
@@ -73,6 +77,7 @@ class WebSocket {
                                     if (valid) basemap.addBuilding(new BasemapBuildingItem(proto, center, angle, road, offset))
                                     resolve(valid)
                                 }
+                                else resolve(false)
                             })
                         }
                         resolve().then((valid: boolean) => {
@@ -86,7 +91,7 @@ class WebSocket {
                                 }
                             }
                             this.socket.send(JSON.stringify(DATA, null, 4))
-                            console.log(`resolve ${data.info} done`)
+                            console.log(`[Socker] finish data validation check.`)
                             selfVar.done = true
                         })
                     }
@@ -102,5 +107,5 @@ class WebSocket {
 }
 
 
-const ws = new WebSocket("pi.koishi.top", 8899)
+const ws = new WebSocket("localhost", 8899)
 

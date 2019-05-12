@@ -4,6 +4,7 @@ import { Point, AnyRect2D, cmp, ParallelRect2D, cmpPt, cross2D } from "./geometr
 import BasemapRoadItem from "./roadItem";
 import * as QuadTree from "quadtree-lib"
 import * as THREE from "three"
+import { ModelData, RoadData, BuildingData } from "../def";
 
 type Restype<R> = {
 	road: BasemapRoadItem<R> | undefined,
@@ -368,6 +369,34 @@ class Basemap<R, B> {
 			}
 		}
 		return res
+	}
+
+	export(): ModelData {
+		const roadData: RoadData[] = []
+		const roads = this.getAllRoads()
+		roads.forEach(road => {
+			roadData.push({
+				from: road.from,
+				to: road.to,
+				width: road.width
+			})
+		})
+
+		const buildingData: BuildingData[] = []
+		const buildings = this.getAllBuildings()
+		buildings.forEach(building => {
+			buildingData.push({
+				prototype: building.proto.name,
+				center: building.center
+			})
+		})
+		const modelData: ModelData = {
+			state: "insert",
+			roads: roadData,
+			buildings: buildingData
+		}
+		return modelData
+		// return JSON.stringify(webData, null, 4)
 	}
 }
 
