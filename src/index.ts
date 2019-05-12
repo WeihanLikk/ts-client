@@ -58,17 +58,28 @@ class WebSocket {
                         console.log(`[Socker] begin to check data validation.`)
                         const resolve = (): Promise<boolean> => {
                             return new Promise((resolve, reject) => {
-                                if (data.roads != null) {
-                                    const { from, to, width } = data.roads[0]
+                                const {state, roads, buildings} = data
+                                if (roads!= null) {
+                                    const { from, to, width } = roads[0]
                                     const fromVec = new THREE.Vector2(from.x, from.y)
                                     const toVec = new THREE.Vector2(to.x, to.y)
                                     const roadItem: BasemapRoadItem<{}> = new BasemapRoadItem<{}>(width, fromVec, toVec)
-                                    const valid = basemap.alignRoad(roadItem)
-                                    if (valid) basemap.addRoad(width, fromVec, toVec)
+                                    let valid:boolean = false
+                                    if(state=="insert"){
+                                        valid = basemap.alignRoad(roadItem)
+                                        if (valid) basemap.addRoad(width, fromVec, toVec)
+                                    }
+                                    else if (state=="remove"){
+                                        const center = fromVec.clone().add(toVec).divideScarlar(2)
+                                        const road = basemap.removeRoad(roadItem)
+                                        if (valid) basemap.addRoad(width, fromVec, toVec)
+                                    }
+                                    // const valid = basemap.alignRoad(roadItem)
+                                    // if (valid) basemap.addRoad(width, fromVec, toVec)
                                     resolve(valid)
                                 }
-                                else if (data.buildings != null) {
-                                    const { prototype, center } = data.buildings[0]
+                                else if (buildings != null) {
+                                    const { prototype, center } = buildings[0]
                                     const proto = manager.get(prototype)
                                     const pos = new THREE.Vector2(center.x, center.y)
                                     const modelInfo = basemap.alignBuilding(pos, proto.placeholder)
@@ -91,7 +102,7 @@ class WebSocket {
                                 }
                             }
                             this.socket.send(JSON.stringify(DATA, null, 4))
-                            console.log(`[Socker] finish data validation check.`)
+                            console.log(`[Socker] finish data validation check, state:${valid}.`)
                             selfVar.done = true
                         })
                     }
