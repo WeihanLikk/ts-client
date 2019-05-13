@@ -4,7 +4,7 @@ import { Basemap } from "./basemap";
 import BasemapRoadItem from "./basemap/roadItem";
 import { BuildingManager } from "./building/manager";
 import BasemapBuildingItem from "./basemap/buildingItem";
-import { SynchronizationData } from "./def";
+import { SynchronizationData, MessageData } from "./def";
 
 class Var {
     static id: number = 0
@@ -30,12 +30,7 @@ class WebSocket {
 
         this.socket.onopen = () => {
             console.log("[Socket] connection established.")
-            this.socket.send(JSON.stringify({
-                type: "Message",
-                data: {
-                    info: "__ts_client"
-                }
-            }, null, 4))
+            this.socket.send(new MessageData("__ts_client").toString())
         }
 
 
@@ -44,10 +39,18 @@ class WebSocket {
             console.log(`[Socket] receive ${msg.data}.`)
             const { type, data } = msgData
             if (type == "Message" && data.info == "Data required") {
-                this.socket.send(new SynchronizationData(basemap.export()).toString())
+                const modelData = basemap.export()
+                this.socket.send(JSON.stringify({
+                    type: "Message",
+                    data: {
+                        info: "Room data",
+                        roads: modelData.roads,
+                        buildings: modelData.buildings
+                    }
+                }, null, 4))
             }
 
-            if (type == "Synchronization Data") {
+            if (type == "Synchronization data") {
                 const lastVar = last
                 const selfVar = new Var()
                 last = selfVar
@@ -55,24 +58,24 @@ class WebSocket {
                 const triggerMainLoop = () => {
                     if (!lastVar.done) setTimeout(triggerMainLoop, 0)
                     else {
-                        console.log(`[Socker] begin to check data validation.`)
+                        console.log(`[Socket] begin to check data validation.`)
                         const resolve = (): Promise<boolean> => {
                             return new Promise((resolve, reject) => {
-                                const {state, roads, buildings} = data
-                                if (roads!= null) {
+                                const { state, roads, buildings } = data
+                                if (roads != null) {
                                     const { from, to, width } = roads[0]
                                     const fromVec = new THREE.Vector2(from.x, from.y)
                                     const toVec = new THREE.Vector2(to.x, to.y)
-                                    let valid:boolean = false
-                                    if(state=="insert"){
+                                    let valid: boolean = false
+                                    if (state == "insert") {
                                         const roadItem: BasemapRoadItem<{}> = new BasemapRoadItem<{}>(width, fromVec, toVec)
                                         valid = basemap.alignRoad(roadItem)
                                         if (valid) basemap.addRoad(width, fromVec, toVec)
                                     }
-                                    else if (state=="remove"){
+                                    else if (state == "remove") {
                                         const center = fromVec.clone().add(toVec).divideScalar(2)
                                         const roadItem = basemap.selectRoad(center)
-                                        if(roadItem){
+                                        if (roadItem) {
                                             basemap.removeRoad(roadItem)
                                             valid = true
                                         }
@@ -82,23 +85,27 @@ class WebSocket {
                                     resolve(valid)
                                 }
                                 else if (buildings != null) {
-                                    if(state=="insert"){
-                                        const { prototype, center } = buildings[0]
+                                    const { prototype, center } = buildings[0]
+                                    if (state == "insert") {
                                         const proto = manager.get(prototype)
                                         const pos = new THREE.Vector2(center.x, center.y)
                                         const modelInfo = basemap.alignBuilding(pos, proto.placeholder)
                                         const { road, angle, valid, offset } = modelInfo
+                                        console.log("road", road)
                                         if (valid) basemap.addBuilding(new BasemapBuildingItem(proto, center, angle, road, offset))
                                         resolve(valid)
                                     }
-                                    else if (state=="remove"){
-                                        const building = basemap.selectBuilding()
-                                        basemap.removeBuilding()
+                                    else if (state == "remove") {
+                                        const building = basemap.selectBuilding(center)
+                                        if (building) {
+                                            basemap.removeBuilding(building)
+                                            resolve(true)
+                                        }
+                                        else resolve(false)
                                     }
                                     // if (valid) basemap.addBuilding(new BasemapBuildingItem(proto, center, angle, road, offset))
                                     // resolve(valid)
                                 }
-                                else resolve(false)
                             })
                         }
                         resolve().then((valid: boolean) => {
@@ -112,7 +119,7 @@ class WebSocket {
                                 }
                             }
                             this.socket.send(JSON.stringify(DATA, null, 4))
-                            console.log(`[Socker] finish data validation check, state:${valid}.`)
+                            console.log(`[Socket] finish data validation check, state:${valid}.`)
                             selfVar.done = true
                         })
                     }

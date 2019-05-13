@@ -1,6 +1,6 @@
 import BasemapBuildingItem from "./buildingItem";
-import { mapWidth, mapHeight, maxBuildings, maxRoads, QuadTreeItem, PointDetectRadius, AttachRadius, minRoadLength } from "./def";
-import { Point, AnyRect2D, cmp, ParallelRect2D, cmpPt, cross2D } from "./geometry";
+import { mapWidth, mapHeight, maxBuildings, maxRoads, QuadTreeItem, PointDetectRadius, AttachRadius, minRoadLength, defaultBuildingSelectionRange, defaultRoadSelectionRange } from "./def";
+import { Point, AnyRect2D, cmp, ParallelRect2D, cmpPt, cross2D, Seg2D } from "./geometry";
 import BasemapRoadItem from "./roadItem";
 import * as QuadTree from "quadtree-lib"
 import * as THREE from "three"
@@ -147,29 +147,38 @@ class Basemap<R, B> {
 		}
 
 		//detect road cross
-		let intersectRoad = this.roadTree.colliding(road.quadTreeItem)
-		for (let item of intersectRoad) {
+		let intersectRoads = this.roadTree.colliding(road.quadTreeItem)
+		for (let item of intersectRoads) {
 			let r = item.obj!
 			if (r.rect.intersect(road.rect)) {
-				if (r.seg.ptOnLine(road.from)) {
-					const rSeg = cmpPt(road.from, r.from) ? r.seg.clone() : r.seg.reverseClone()
-					const angle = rSeg.angle(road.seg)
-					if (cmp(angle, Math.PI * 0.25) >= 0)
-						continue
+				if (r.seg.ptOnLine(road.from) || r.seg.ptOnLine(road.to)) {
+					const aVec = r.from.clone()
+						.sub(r.to)
+						.normalize()
+					const bVec = road.from.clone()
+						.sub(road.to)
+						.normalize();
+					const sinValue = Math.abs((<any>aVec).cross(bVec));
+					// console.log(sinValue)
+					if (cmp(sinValue, Math.sqrt(2) / 2) >= 0) continue
+					// const rSeg = cmpPt(road.from, r.from) ? r.seg.clone() : r.seg.reverseClone()
+					// const angle = rSeg.angle(road.seg)
+					// if (cmp(angle, Math.PI * 0.25) >= 0)
+					// 	continue
 				}
-				else if (r.seg.ptOnLine(road.to)) {
-					const rSeg = cmpPt(road.to, r.from) ? r.seg.clone() : r.seg.reverseClone()
-					const angle = rSeg.angle(road.seg.reverseClone())
-					if (cmp(angle, Math.PI * 0.25) >= 0)
-						continue
-				}
-				else {
-					const angle = road.seg.angle(r.seg)
-					if (cmp(angle, Math.PI * 0.75) >= 0 ||
-						cmp(angle, Math.PI * 0.25) <= 0
-					)
-						continue
-				}
+				// else if (r.seg.ptOnLine(road.to)) {
+				// 	const rSeg = cmpPt(road.to, r.from) ? r.seg.clone() : r.seg.reverseClone()
+				// 	const angle = rSeg.angle(road.seg.reverseClone())
+				// 	if (cmp(angle, Math.PI * 0.25) >= 0)
+				// 		continue
+				// }
+				// else {
+				// 	const angle = road.seg.angle(r.seg)
+				// 	if (cmp(angle, Math.PI * 0.75) >= 0 ||
+				// 		cmp(angle, Math.PI * 0.25) <= 0
+				// 	)
+				// 		continue
+				// }
 				return false
 			}
 		}
@@ -185,7 +194,7 @@ class Basemap<R, B> {
 			angle: 0,
 			valid: false
 		}
-		const road = this.getNearRoad(pt)
+		const road = this.getVerticalRoad(pt)
 		if (road) {
 
 			if (road.seg.distance(pt) > placeholder.height) {
@@ -297,17 +306,70 @@ class Basemap<R, B> {
 		return obj
 	}
 
+	private getBoxBuildingItems(pt: Point, distOfBox: number = defaultBuildingSelectionRange): QuadTreeItem<BasemapBuildingItem<B>>[] {
+		return this.buildingTree.colliding({
+			x: pt.x,
+			y: pt.y,
+			width: distOfBox,
+			height: distOfBox
+		})
+	}
+
+	selectBuilding(pt: Point, distOfBox: number = defaultBuildingSelectionRange): BasemapBuildingItem<B> | undefined {
+		let res = this.getBoxBuilding(pt, distOfBox)
+		if (res.rect.containPt(pt)) return res
+	}
+
+	getBoxBuilding(pt: Point, distOfBox: number = defaultBuildingSelectionRange): BasemapBuildingItem<B> | undefined {
+		const items = this.getBoxBuildingItems(pt, distOfBox)
+		let minDist = Infinity
+		let res: BasemapBuildingItem<B> = undefined
+		items.forEach((item: QuadTreeItem<BasemapBuildingItem<B>>) => {
+			let building = item.obj!
+			const dist = building.center.distanceTo(pt)
+			if (dist < minDist) {
+				minDist = dist
+				res = building
+			}
+		})
+		return res
+	}
+
+	private getBoxRoadItems(pt: Point, distOfBox: number = defaultRoadSelectionRange): QuadTreeItem<BasemapRoadItem<R>>[] {
+		return this.roadTree.colliding({
+			x: pt.x,
+			y: pt.y,
+			width: distOfBox,
+			height: distOfBox
+		})
+	}
+
 	selectRoad(pt: Point): BasemapRoadItem<R> | undefined {
-		let res = this.getNearRoad(pt)
+		let res = this.getVerticalRoad(pt)
 		if (res &&
 			cmp(res.seg.distance(pt), res.width / 2) <= 0)
 			return res
 	}
 
-	getNearRoad(pt: Point): BasemapRoadItem<R> | undefined {
-		let res: BasemapRoadItem<R> | undefined
+	getBoxRoad(pt: Point, distOfBox: number = defaultRoadSelectionRange): BasemapRoadItem<R> | undefined {
+		const items = this.getBoxRoadItems(pt, distOfBox)
 		let minDist = Infinity
-		this.roadTree.each((item: any) => {
+		let res: BasemapRoadItem<R> = undefined
+		items.forEach((item: QuadTreeItem<BasemapRoadItem<R>>) => {
+			let road = item.obj!
+			if (road.seg.distance(pt) < minDist) {
+				minDist = road.seg.distance(pt)
+				res = road
+			}
+		})
+		return res
+	}
+
+	getVerticalRoad(pt: Point, distOfBox: number = defaultRoadSelectionRange): BasemapRoadItem<R> | undefined {
+		let res: BasemapRoadItem<R> = undefined
+		let minDist = Infinity
+		const items = this.getBoxRoadItems(pt, distOfBox)
+		items.forEach((item: QuadTreeItem<BasemapRoadItem<R>>) => {
 			let road = item.obj!
 			if (road.seg.distance(pt) < minDist) {
 				const ap = pt.clone().sub(road.seg.from)
@@ -325,7 +387,33 @@ class Basemap<R, B> {
 
 	attachNearPoint(pt: Point): Point {
 		const near = this.getCandidatePoint(pt)
-		return near && near.distanceTo(pt) <= AttachRadius && near || pt
+		if (near && near.distanceTo(pt) <= AttachRadius) return near
+		else {
+			const road = this.getVerticalRoad(pt, AttachRadius)
+			if (road == undefined) return pt
+
+			const nearPt = pt.clone()
+			const farPt = pt.clone()
+			const origin = new THREE.Vector2(0, 0)
+			const dir = road.to.clone().sub(road.from).rotateAround(origin, Math.PI / 2).normalize()
+			nearPt.add(dir.clone().multiplyScalar(2 * AttachRadius))
+			farPt.add(dir.clone().negate().multiplyScalar(2 * AttachRadius))
+			const newSeg = new Seg2D(nearPt, farPt)
+			if (road.seg.intersect(newSeg)) {
+				let c = road.from
+				let d = road.to
+				let cd = d.clone().sub(c)
+				let dist1 = newSeg.distance(c)
+				let dist2 = newSeg.distance(d)
+				let t = dist1 / (dist1 + dist2)
+				if (isNaN(t)) {
+					return pt
+				}
+				let crossPt = c.clone().add(cd.clone().multiplyScalar(t))
+				return crossPt
+			}
+			return pt
+		}
 	}
 
 	getCandidatePoint(pt: Point): Point {
@@ -370,7 +458,6 @@ class Basemap<R, B> {
 		}
 		return res
 	}
-
 	export(): ModelData {
 		const roadData: RoadData[] = []
 		const roads = this.getAllRoads()

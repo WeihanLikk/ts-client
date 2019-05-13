@@ -1,6 +1,6 @@
-import { DistUnit } from "../basemap";
 import { JsonAsset } from "../wasp";
 import * as THREE from "three"
+import { DistUnit } from "../basemap";
 
 interface TransformStep {
 	rotate?: number[],
