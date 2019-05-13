@@ -1,4 +1,4 @@
 /build
-/assests
+/assests/*
 /node_modules
 /.vscode
