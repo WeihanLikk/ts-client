@@ -63,30 +63,40 @@ class WebSocket {
                                     const { from, to, width } = roads[0]
                                     const fromVec = new THREE.Vector2(from.x, from.y)
                                     const toVec = new THREE.Vector2(to.x, to.y)
-                                    const roadItem: BasemapRoadItem<{}> = new BasemapRoadItem<{}>(width, fromVec, toVec)
                                     let valid:boolean = false
                                     if(state=="insert"){
+                                        const roadItem: BasemapRoadItem<{}> = new BasemapRoadItem<{}>(width, fromVec, toVec)
                                         valid = basemap.alignRoad(roadItem)
                                         if (valid) basemap.addRoad(width, fromVec, toVec)
                                     }
                                     else if (state=="remove"){
-                                        const center = fromVec.clone().add(toVec).divideScarlar(2)
-                                        const road = basemap.removeRoad(roadItem)
-                                        if (valid) basemap.addRoad(width, fromVec, toVec)
+                                        const center = fromVec.clone().add(toVec).divideScalar(2)
+                                        const roadItem = basemap.selectRoad(center)
+                                        if(roadItem){
+                                            basemap.removeRoad(roadItem)
+                                            valid = true
+                                        }
                                     }
                                     // const valid = basemap.alignRoad(roadItem)
                                     // if (valid) basemap.addRoad(width, fromVec, toVec)
                                     resolve(valid)
                                 }
                                 else if (buildings != null) {
-                                    const { prototype, center } = buildings[0]
-                                    const proto = manager.get(prototype)
-                                    const pos = new THREE.Vector2(center.x, center.y)
-                                    const modelInfo = basemap.alignBuilding(pos, proto.placeholder)
-                                    const { road, angle, valid, offset } = modelInfo
-                                    // component.locateBuilding()
-                                    if (valid) basemap.addBuilding(new BasemapBuildingItem(proto, center, angle, road, offset))
-                                    resolve(valid)
+                                    if(state=="insert"){
+                                        const { prototype, center } = buildings[0]
+                                        const proto = manager.get(prototype)
+                                        const pos = new THREE.Vector2(center.x, center.y)
+                                        const modelInfo = basemap.alignBuilding(pos, proto.placeholder)
+                                        const { road, angle, valid, offset } = modelInfo
+                                        if (valid) basemap.addBuilding(new BasemapBuildingItem(proto, center, angle, road, offset))
+                                        resolve(valid)
+                                    }
+                                    else if (state=="remove"){
+                                        const building = basemap.selectBuilding()
+                                        basemap.removeBuilding()
+                                    }
+                                    // if (valid) basemap.addBuilding(new BasemapBuildingItem(proto, center, angle, road, offset))
+                                    // resolve(valid)
                                 }
                                 else resolve(false)
                             })
