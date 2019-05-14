@@ -10,11 +10,11 @@ var __values = (this && this.__values) || function (o) {
     };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+var THREE = require("three");
 var def_1 = require("./def");
 var geometry_1 = require("./geometry");
 var roadItem_1 = require("./roadItem");
 var QuadTree = require("quadtree-lib");
-var THREE = require("three");
 var Basemap = /** @class */ (function () {
     function Basemap() {
         this.roadID = new Map();

@@ -1,10 +1,10 @@
+import * as THREE from "three"
 import BasemapBuildingItem from "./buildingItem";
 import { mapWidth, mapHeight, maxBuildings, maxRoads, QuadTreeItem, PointDetectRadius, AttachRadius, minRoadLength, defaultBuildingSelectionRange, defaultRoadSelectionRange } from "./def";
 import { Point, AnyRect2D, cmp, ParallelRect2D, cmpPt, cross2D, Seg2D } from "./geometry";
 import BasemapRoadItem from "./roadItem";
 import * as QuadTree from "quadtree-lib"
-import * as THREE from "three"
-import { ModelData, RoadData, BuildingData } from "../def";
+import { ModelData, BuildingData, RoadData } from "../def";
 
 type Restype<R> = {
 	road: BasemapRoadItem<R> | undefined,

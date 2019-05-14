@@ -1,7 +1,7 @@
+import * as THREE from "three";
 import BasemapBuildingItem from "./buildingItem";
 import { Point } from "./geometry";
 import BasemapRoadItem from "./roadItem";
-import * as THREE from "three";
 import { ModelData } from "../def";
 declare type Restype<R> = {
     road: BasemapRoadItem<R> | undefined;
