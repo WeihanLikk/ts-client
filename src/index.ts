@@ -164,5 +164,5 @@ manager.load([
     "export/Building_Stadium",
     "export/Building_Super Market"
 ]).then(() => {
-   const ws = new WebSocket("localhost", 8899)
+    const ws = new WebSocket("localhost", 8899)
 })
