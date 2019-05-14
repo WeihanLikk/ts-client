@@ -136,7 +136,7 @@ class WebSocket {
     }
 }
 
-manager.load(
+manager.load([
     "export/Building_Auto Service",
     "export/Building_Bakery",
     "export/Building_Bar",
@@ -163,7 +163,7 @@ manager.load(
     "export/Building Sky_small_color01",
     "export/Building_Stadium",
     "export/Building_Super Market"
-).then(() => {
+]).then(() => {
     const ws = new WebSocket("localhost", 8899)
 })
 
