@@ -90,6 +90,7 @@ class WebSocket {
                                     const { prototype, center } = buildings[0]
                                     if (state == "insert") {
                                         const proto = manager.get(prototype)
+                                        console.log(`proto: ${proto}`)
                                         const pos = new THREE.Vector2(center.x, center.y)
                                         const modelInfo = basemap.alignBuilding(pos, proto.placeholder)
                                         const { road, angle, valid, offset } = modelInfo
