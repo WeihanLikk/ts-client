@@ -1,3 +1,4 @@
+import * as THREE from "three"
 export type WebDataType = "Login"
     | "Room List"
     | "Enter Room"

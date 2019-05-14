@@ -4,7 +4,7 @@ import { Basemap } from "./basemap";
 import BasemapRoadItem from "./basemap/roadItem";
 import { BuildingManager } from "./building/manager";
 import BasemapBuildingItem from "./basemap/buildingItem";
-import { SynchronizationData, MessageData } from "./def";
+import { SynchronizationData, MessageData, RoadData, BuildingData } from "./def";
 
 class Var {
     static id: number = 0
@@ -61,8 +61,8 @@ class WebSocket {
                         console.log(`[Socket] begin to check data validation.`)
                         const resolve = (): Promise<boolean> => {
                             return new Promise((resolve, reject) => {
-                                const { state, roads, buildings } = data
-                                if (roads != null) {
+                                let { state, roads, buildings } = data
+                                if (roads.length != 0) {
                                     const { from, to, width } = roads[0]
                                     const fromVec = new THREE.Vector2(from.x, from.y)
                                     const toVec = new THREE.Vector2(to.x, to.y)
@@ -84,7 +84,7 @@ class WebSocket {
                                     // if (valid) basemap.addRoad(width, fromVec, toVec)
                                     resolve(valid)
                                 }
-                                else if (buildings != null) {
+                                else if (buildings.length != 0) {
                                     const { prototype, center } = buildings[0]
                                     if (state == "insert") {
                                         const proto = manager.get(prototype)
