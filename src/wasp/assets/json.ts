@@ -8,7 +8,7 @@ export class JsonAsset extends Asset<{ [key: string]: any }> {
 			const file = FS.readFile(this.path, (err, data) => {
 				if (err) {
 					reject(err)
-					console.log("Fail to open json")
+					console.log("Failed to open json")
 				}
 				resolve(JSON.parse(data.toString()))
 			})

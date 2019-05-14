@@ -194,6 +194,7 @@ var Basemap = /** @class */ (function () {
             finally { if (e_5) throw e_5.error; }
         }
         //detect road cross
+        var minAngle = Math.sqrt(2) / 2;
         var intersectRoads = this.roadTree.colliding(road.quadTreeItem);
         try {
             for (var intersectRoads_1 = __values(intersectRoads), intersectRoads_1_1 = intersectRoads_1.next(); !intersectRoads_1_1.done; intersectRoads_1_1 = intersectRoads_1.next()) {
@@ -201,6 +202,30 @@ var Basemap = /** @class */ (function () {
                 var r = item.obj;
                 if (r.rect.intersect(road.rect)) {
                     if (r.seg.ptOnLine(road.from) || r.seg.ptOnLine(road.to)) {
+                        if (geometry_1.cmp(r.seg.from.distanceTo(road.from), 0) == 0) {
+                            var ab = r.seg.to.clone().sub(road.from).normalize();
+                            var ac = road.to.clone().sub(road.from).normalize();
+                            if (geometry_1.cmp(ab.dot(ac), minAngle) <= 0)
+                                continue;
+                        }
+                        else if (geometry_1.cmp(r.seg.from.distanceTo(road.to), 0) == 0) {
+                            var ab = r.seg.to.clone().sub(road.to).normalize();
+                            var ac = road.from.clone().sub(road.to).normalize();
+                            if (geometry_1.cmp(ab.dot(ac), minAngle) <= 0)
+                                continue;
+                        }
+                        else if (geometry_1.cmp(r.seg.to.distanceTo(road.from), 0) == 0) {
+                            var ab = r.seg.from.clone().sub(road.from).normalize();
+                            var ac = road.to.clone().sub(road.from).normalize();
+                            if (geometry_1.cmp(ab.dot(ac), minAngle) <= 0)
+                                continue;
+                        }
+                        else if (geometry_1.cmp(r.seg.to.distanceTo(road.to), 0) == 0) {
+                            var ab = r.seg.from.clone().sub(road.to).normalize();
+                            var ac = road.from.clone().sub(road.to).normalize();
+                            if (geometry_1.cmp(ab.dot(ac), minAngle) <= 0)
+                                continue;
+                        }
                         var aVec = r.from.clone()
                             .sub(r.to)
                             .normalize();
@@ -208,27 +233,9 @@ var Basemap = /** @class */ (function () {
                             .sub(road.to)
                             .normalize();
                         var sinValue = Math.abs(aVec.cross(bVec));
-                        // console.log(sinValue)
-                        if (geometry_1.cmp(sinValue, Math.sqrt(2) / 2) >= 0)
+                        if (geometry_1.cmp(sinValue, minAngle) >= 0)
                             continue;
-                        // const rSeg = cmpPt(road.from, r.from) ? r.seg.clone() : r.seg.reverseClone()
-                        // const angle = rSeg.angle(road.seg)
-                        // if (cmp(angle, Math.PI * 0.25) >= 0)
-                        // 	continue
                     }
-                    // else if (r.seg.ptOnLine(road.to)) {
-                    // 	const rSeg = cmpPt(road.to, r.from) ? r.seg.clone() : r.seg.reverseClone()
-                    // 	const angle = rSeg.angle(road.seg.reverseClone())
-                    // 	if (cmp(angle, Math.PI * 0.25) >= 0)
-                    // 		continue
-                    // }
-                    // else {
-                    // 	const angle = road.seg.angle(r.seg)
-                    // 	if (cmp(angle, Math.PI * 0.75) >= 0 ||
-                    // 		cmp(angle, Math.PI * 0.25) <= 0
-                    // 	)
-                    // 		continue
-                    // }
                     return false;
                 }
             }

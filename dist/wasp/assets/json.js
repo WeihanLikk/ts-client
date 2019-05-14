@@ -26,7 +26,7 @@ var JsonAsset = /** @class */ (function (_super) {
             var file = FS.readFile(_this.path, function (err, data) {
                 if (err) {
                     reject(err);
-                    console.log("Fail to open json");
+                    console.log("Failed to open json");
                 }
                 resolve(JSON.parse(data.toString()));
             });
