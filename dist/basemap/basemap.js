@@ -172,8 +172,8 @@ var Basemap = /** @class */ (function () {
         this.buildingTree.push(building.quadTreeItem);
     };
     Basemap.prototype.alignRoad = function (road, lengthAssert) {
-        var e_5, _a, e_6, _b;
         if (lengthAssert === void 0) { lengthAssert = true; }
+        var e_5, _a, e_6, _b;
         if (lengthAssert && geometry_1.cmp(road.seg.length(), def_1.minRoadLength) < 0)
             return false;
         //detect building cross

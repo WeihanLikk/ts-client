@@ -112,7 +112,6 @@ export class BuildingManager {
 	}
 
 	load(path: string[] | string): Promise<(BuildingPrototype | undefined)[]> {
-
 		console.log("%c[Building Manager] Loading buildings...", "background: #00cc00; color: #fff")
 		// console.log(path)
 

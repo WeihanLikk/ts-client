@@ -14,6 +14,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var asset_1 = require("./asset");
+var FS = require("fs");
 var JsonAsset = /** @class */ (function (_super) {
     __extends(JsonAsset, _super);
     function JsonAsset(path) {
@@ -22,13 +23,13 @@ var JsonAsset = /** @class */ (function (_super) {
     JsonAsset.prototype.load = function () {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            try {
-                resolve(JSON.parse(_this.path));
-            }
-            catch (err) {
-                reject(err);
-                console.log("Fail to open json");
-            }
+            var file = FS.readFile(_this.path, function (err, data) {
+                if (err) {
+                    reject(err);
+                    console.log("Fail to open json");
+                }
+                resolve(JSON.parse(data.toString()));
+            });
         });
     };
     return JsonAsset;

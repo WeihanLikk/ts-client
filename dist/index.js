@@ -84,7 +84,6 @@ var WebSocket = /** @class */ (function () {
                                     var _b = buildings[0], prototype = _b.prototype, center = _b.center;
                                     if (state == "insert") {
                                         var proto = manager.get(prototype);
-                                        console.log("proto: " + proto);
                                         var pos = new THREE.Vector2(center.x, center.y);
                                         var modelInfo = basemap.alignBuilding(pos, proto.placeholder);
                                         var road = modelInfo.road, angle = modelInfo.angle, valid = modelInfo.valid, offset = modelInfo.offset;
