@@ -135,7 +135,33 @@ class WebSocket {
         }
     }
 }
-
-
-    const ws = new WebSocket("localhost", 8899)
-
+manager.load([
+    "assests/export/Building_Auto Service",
+    "assests/export/Building_Bakery",
+    "assests/export/Building_Bar",
+    "assests/export/Building_Books Shop",
+    "assests/export/Building_Chicken Shop",
+    "assests/export/Building_Clothing",
+    "assests/export/Building_Coffee Shop",
+    "assests/export/Building_Drug Store",
+    "assests/export/Building_Factory",
+    "assests/export/Building_Fast Food",
+    "assests/export/Building_Fruits  Shop",
+    "assests/export/Building_Gas Station",
+    "assests/export/Building_Gift Shop",
+    "assests/export/Building_House_01_color01",
+    "assests/export/Building_House_02_color01",
+    "assests/export/Building_House_03_color01",
+    "assests/export/Building_House_04_color01",
+    "assests/export/Building_Music Store",
+    "assests/export/Building_Pizza",
+    "assests/export/Building_Residential_color01",
+    "assests/export/Building_Restaurant",
+    "assests/export/Building_Shoes Shop",
+    "assests/export/Building Sky_big_color01",
+    "assests/export/Building Sky_small_color01",
+    "assests/export/Building_Stadium",
+    "assests/export/Building_Super Market"
+]).then(() => {
+   const ws = new WebSocket("localhost", 8899)
+})
