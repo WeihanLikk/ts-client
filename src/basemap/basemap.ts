@@ -382,6 +382,7 @@ class Basemap<R, B> {
 		const items = this.getBoxRoadItems(pt, distOfBox)
 		items.forEach((item: QuadTreeItem<BasemapRoadItem<R>>) => {
 			let road = item.obj!
+			console.log(road)
 			if (road.seg.distance(pt) < minDist) {
 				const ap = pt.clone().sub(road.seg.from)
 				const bp = pt.clone().sub(road.seg.to)
