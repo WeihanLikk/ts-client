@@ -82,18 +82,18 @@ var WebSocket = /** @class */ (function () {
                                 }
                                 else if (buildings.length != 0) {
                                     var _b = buildings[0], prototype = _b.prototype, center = _b.center;
+                                    var pos = new THREE.Vector2(center.x, center.y);
                                     if (state == "insert") {
                                         var proto = manager.get(prototype);
-                                        var pos = new THREE.Vector2(center.x, center.y);
                                         var modelInfo = basemap.alignBuilding(pos, proto.placeholder);
                                         var road = modelInfo.road, angle = modelInfo.angle, valid = modelInfo.valid, offset = modelInfo.offset;
                                         console.log("road", road);
                                         if (valid)
-                                            basemap.addBuilding(new buildingItem_1.default(proto, center, angle, road, offset));
+                                            basemap.addBuilding(new buildingItem_1.default(proto, pos, angle, road, offset));
                                         resolve(valid);
                                     }
                                     else if (state == "remove") {
-                                        var building = basemap.selectBuilding(center);
+                                        var building = basemap.selectBuilding(pos);
                                         if (building) {
                                             basemap.removeBuilding(building);
                                             resolve(true);
