@@ -198,9 +198,12 @@ class Basemap<R, B> {
 			valid: false
 		}
 		const road = this.getVerticalRoad(pt, Math.max(placeholder.width, placeholder.height) * 1.5)
+
+
 		if (road) {
 
 			if (road.seg.distance(pt) > placeholder.height + road.width / 2) {
+				console.log("dist assert")
 				return nullval
 			}
 
@@ -208,6 +211,7 @@ class Basemap<R, B> {
 			let AC = road.to.clone().sub(road.from)
 			let roadLength = AC.length()
 			if (roadLength < placeholder.width) {
+				console.log("road length assert")
 				return nullval
 			}
 			roadLength -= placeholder.width
@@ -279,7 +283,7 @@ class Basemap<R, B> {
 			}
 			return res
 		}
-
+		console.log("road assert:")
 		return nullval
 	}
 
