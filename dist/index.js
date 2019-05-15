@@ -82,18 +82,18 @@ var WebSocket = /** @class */ (function () {
                                 }
                                 else if (buildings.length != 0) {
                                     var _b = buildings[0], prototype = _b.prototype, center = _b.center;
+                                    var pos = new THREE.Vector2(center.x, center.y);
+                                    var proto = manager.get(prototype);
                                     if (state == "insert") {
-                                        var proto = manager.get(prototype);
-                                        var pos = new THREE.Vector2(center.x, center.y);
-                                        var modelInfo = basemap.alignBuilding(pos, proto.placeholder);
+                                        var modelInfo = basemap.alignBuilding(pos.clone(), proto.placeholder);
                                         var road = modelInfo.road, angle = modelInfo.angle, valid = modelInfo.valid, offset = modelInfo.offset;
-                                        console.log("road", road);
+                                        console.log("insert res", road, angle, valid, offset);
                                         if (valid)
-                                            basemap.addBuilding(new buildingItem_1.default(proto, center, angle, road, offset));
+                                            basemap.addBuilding(new buildingItem_1.default(proto, pos, angle, road, offset));
                                         resolve(valid);
                                     }
                                     else if (state == "remove") {
-                                        var building = basemap.selectBuilding(center);
+                                        var building = basemap.selectBuilding(pos, Math.max(proto.placeholder.x, proto.placeholder.y) * 5);
                                         if (building) {
                                             basemap.removeBuilding(building);
                                             resolve(true);
@@ -159,6 +159,6 @@ manager.load([
     "export/Building_Stadium",
     "export/Building_Super Market"
 ]).then(function () {
-    var ws = new WebSocket("localhost", 8899);
+    var ws = new WebSocket("47.98.213.238", 8899);
 });
 //# sourceMappingURL=index.js.map

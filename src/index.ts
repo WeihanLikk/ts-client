@@ -89,16 +89,16 @@ class WebSocket {
                                 else if (buildings.length != 0) {
                                     const { prototype, center } = buildings[0]
                                     const pos = new THREE.Vector2(center.x, center.y)
+                                    const proto = manager.get(prototype)
                                     if (state == "insert") {
-                                        const proto = manager.get(prototype)
-                                        const modelInfo = basemap.alignBuilding(pos, proto.placeholder)
+                                        const modelInfo = basemap.alignBuilding(pos.clone(), proto.placeholder)
                                         const { road, angle, valid, offset } = modelInfo
-                                        console.log("insert res:", road, angle, valid, offset)
-                                        if (valid) basemap.addBuilding(new BasemapBuildingItem(proto, pos, angle, road, offset))
+                                        console.log("insert res", road, angle, valid, offset)
+                                        if (valid) basemap.addBuilding(new BasemapBuildingItem<{}>(proto, pos, angle, road, offset))
                                         resolve(valid)
                                     }
                                     else if (state == "remove") {
-                                        const building = basemap.selectBuilding(pos)
+                                        const building = basemap.selectBuilding(pos, Math.max(proto.placeholder.x, proto.placeholder.y) * 5)
                                         if (building) {
                                             basemap.removeBuilding(building)
                                             resolve(true)
@@ -164,5 +164,6 @@ manager.load([
     "export/Building_Stadium",
     "export/Building_Super Market"
 ]).then(() => {
+    // const ws = new WebSocket("47.98.213.238", 8899)
     const ws = new WebSocket("localhost", 8899)
 })

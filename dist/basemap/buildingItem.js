@@ -18,7 +18,10 @@ var geometry_1 = require("./geometry");
 var THREE = require("three");
 var BasemapBuildingItem = /** @class */ (function (_super) {
     __extends(BasemapBuildingItem, _super);
-    function BasemapBuildingItem(proto, center, angle, road, offset //positive: leftside of the road
+    function BasemapBuildingItem(proto, 
+    // private readonly placeholder: THREE.Vector2,
+    // readonly bbox2d: THREE.Box2,
+    center, angle, road, offset //positive: leftside of the road
     ) {
         var _this = _super.call(this) || this;
         _this.proto = proto;
@@ -64,7 +67,7 @@ var BasemapBuildingItem = /** @class */ (function (_super) {
         if (this.shouldUpdate) {
             this.shouldUpdate = false;
             var offset = Math.abs(this.offset);
-            var offsetSign = this.offset > 0 ? 1 : -1;
+            var offsetSign = this.offset > 0 ? 1 : -1; // 1:left, -1:right
             var houseRoadDir = this.road.to.clone().sub(this.road.from).normalize();
             var houseRoadNormDir = houseRoadDir.clone()
                 .rotateAround(new THREE.Vector2(0, 0), Math.PI / 2 * offsetSign);
@@ -79,6 +82,21 @@ var BasemapBuildingItem = /** @class */ (function (_super) {
             housePts[3] = housePts[2].clone()
                 .sub(houseRoadDir.clone().multiplyScalar(this.placeholder.width));
             this._rect = new geometry_1.AnyRect2D(housePts);
+            // let housePts = new AnyRect2D([
+            // 	this.center.clone()
+            // 		.add(houseRoadNormDir.clone().multiplyScalar(this.placeholder.height / 2))
+            // 		.add(houseRoadDir.clone().multiplyScalar(this.placeholder.width / 2)),
+            // 	this.center.clone()
+            // 		.sub(houseRoadNormDir.clone().multiplyScalar(this.placeholder.height / 2))
+            // 		.add(houseRoadDir.clone().multiplyScalar(this.placeholder.width / 2)),
+            // 	this.center.clone()
+            // 		.sub(houseRoadNormDir.clone().multiplyScalar(this.placeholder.height / 2))
+            // 		.sub(houseRoadDir.clone().multiplyScalar(this.placeholder.width / 2)),
+            // 	this.center.clone()
+            // 		.add(houseRoadNormDir.clone().multiplyScalar(this.placeholder.height / 2))
+            // 		.sub(houseRoadDir.clone().multiplyScalar(this.placeholder.width / 2)),
+            // ])
+            // this._rect = housePts
             //update QuadTreeItem
             Object.assign(this._quadTreeItem, { obj: this });
             Object.assign(this._quadTreeItem, this._rect.treeItem());
