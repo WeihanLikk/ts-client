@@ -258,7 +258,7 @@ var Basemap = /** @class */ (function () {
             angle: 0,
             valid: false
         };
-        var road = this.getVerticalRoad(pt);
+        var road = this.getVerticalRoad(pt, Math.max(placeholder.width, placeholder.height) * 1.5);
         if (road) {
             if (road.seg.distance(pt) > placeholder.height + road.width / 2) {
                 return nullval;
