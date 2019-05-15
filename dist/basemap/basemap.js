@@ -261,12 +261,14 @@ var Basemap = /** @class */ (function () {
         var road = this.getVerticalRoad(pt, Math.max(placeholder.width, placeholder.height) * 1.5);
         if (road) {
             if (road.seg.distance(pt) > placeholder.height + road.width / 2) {
+                console.log("dist assert");
                 return nullval;
             }
             var AB = pt.clone().sub(road.from);
             var AC = road.to.clone().sub(road.from);
             var roadLength = AC.length();
             if (roadLength < placeholder.width) {
+                console.log("road length assert");
                 return nullval;
             }
             roadLength -= placeholder.width;
@@ -351,6 +353,7 @@ var Basemap = /** @class */ (function () {
             }
             return res;
         }
+        console.log("road assert:");
         return nullval;
     };
     // selectBuilding(pt: Point): Building | null
