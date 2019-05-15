@@ -1,7 +1,7 @@
-import * as THREE from "three";
 import BasemapBuildingItem from "./buildingItem";
 import { Point } from "./geometry";
 import BasemapRoadItem from "./roadItem";
+import * as THREE from "three";
 import { ModelData } from "../def";
 declare type Restype<R> = {
     road: BasemapRoadItem<R> | undefined;
@@ -26,6 +26,7 @@ declare class Basemap<R, B> {
     getAllBuildings(): BasemapBuildingItem[];
     addBuilding(building: BasemapBuildingItem<B>): void;
     alignRoad(road: BasemapRoadItem<R>, lengthAssert?: boolean): boolean;
+    static cnt: number;
     alignBuilding(pt: Point, placeholder: THREE.Vector2): Restype<R>;
     removeBuilding(obj: BasemapBuildingItem<B>): BasemapBuildingItem<B>;
     removeRoad(obj: BasemapRoadItem<R>): BasemapRoadItem<R>;

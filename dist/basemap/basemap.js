@@ -10,11 +10,11 @@ var __values = (this && this.__values) || function (o) {
     };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var THREE = require("three");
 var def_1 = require("./def");
 var geometry_1 = require("./geometry");
 var roadItem_1 = require("./roadItem");
 var QuadTree = require("quadtree-lib");
+var THREE = require("three");
 var Basemap = /** @class */ (function () {
     function Basemap() {
         this.roadID = new Map();
@@ -250,7 +250,7 @@ var Basemap = /** @class */ (function () {
         return true;
     };
     Basemap.prototype.alignBuilding = function (pt, placeholder) {
-        var e_7, _a, e_8, _b;
+        var e_7, _a;
         var nullval = {
             road: undefined,
             offset: undefined,
@@ -258,17 +258,17 @@ var Basemap = /** @class */ (function () {
             angle: 0,
             valid: false
         };
-        var road = this.getVerticalRoad(pt, Math.max(placeholder.width, placeholder.height) * 1.5);
+        var road = this.getVerticalRoad(pt, Math.max(placeholder.width, placeholder.height) * 5);
         if (road) {
-            if (road.seg.distance(pt) > placeholder.height + road.width / 2) {
-                console.log("dist assert");
+            if (road.seg.distance(pt) > (placeholder.height / 2 + road.width / 2) * 1.1) {
+                console.log("[assert] road's distance building is too far");
                 return nullval;
             }
             var AB = pt.clone().sub(road.from);
             var AC = road.to.clone().sub(road.from);
             var roadLength = AC.length();
             if (roadLength < placeholder.width) {
-                console.log("road length assert");
+                console.log("[assert] road is too short");
                 return nullval;
             }
             roadLength -= placeholder.width;
@@ -277,8 +277,8 @@ var Basemap = /** @class */ (function () {
             var faceDir = new THREE.Vector2(0, -1);
             //1: left, -1:right
             var offsetSign = geometry_1.cross2D(AC.clone(), (AB)) > 0 ? 1 : -1;
-            var offset = Math.floor(AC.dot(AB) - placeholder.width / 2) + 1;
-            offset = geometry_1.cmp(offset, 1) < 0 ? 1 : geometry_1.cmp(offset, roadLength + 1) > 0 ? Math.floor(roadLength + 1) : offset;
+            var offset = Math.round(AC.dot(AB) - placeholder.width / 2) + 1;
+            offset = geometry_1.cmp(offset, 1) < 0 ? 1 : geometry_1.cmp(offset, roadLength + 1) > 0 ? roadLength + 1 : offset;
             var normDir = AC.clone().rotateAround(origin_1, Math.PI / 2 * offsetSign);
             var negNormDir = normDir.clone().negate();
             // let angle = Math.acos(faceDir.clone().dot(negNormDir)) * -offsetSign
@@ -287,7 +287,7 @@ var Basemap = /** @class */ (function () {
             var center = road.from.clone()
                 .add(AC.clone().multiplyScalar(offset - 1 + placeholder.width / 2))
                 .add(normDir.clone().multiplyScalar(placeholder.height / 2 + road.width / 2));
-            var rect = new geometry_1.AnyRect2D([
+            var rect_1 = new geometry_1.AnyRect2D([
                 center.clone()
                     .add(normDir.clone().multiplyScalar(placeholder.height / 2))
                     .add(AC.clone().multiplyScalar(placeholder.width / 2)),
@@ -302,33 +302,27 @@ var Basemap = /** @class */ (function () {
                     .sub(AC.clone().multiplyScalar(placeholder.width / 2)),
             ]);
             offset *= offsetSign;
-            var res = {
+            var res_1 = {
                 road: road,
                 offset: offset,
                 center: center,
                 angle: angle,
                 valid: true
             };
-            var rectItem = rect.treeItem();
+            var rectItem = rect_1.treeItem();
             //detect building cross
             var intersectBuilding = this.buildingTree.colliding(rectItem);
-            try {
-                for (var intersectBuilding_2 = __values(intersectBuilding), intersectBuilding_2_1 = intersectBuilding_2.next(); !intersectBuilding_2_1.done; intersectBuilding_2_1 = intersectBuilding_2.next()) {
-                    var item = intersectBuilding_2_1.value;
-                    var building = item.obj;
-                    if (building.rect.intersect(rect)) {
-                        res.valid = false;
-                        return res;
-                    }
+            intersectBuilding.forEach(function (item) {
+                var building = item.obj;
+                if (building.rect.intersect(rect_1)) {
+                    // console.log(`detect a building cross`)
+                    // console.log(building.rect)
+                    // console.log(rect)
+                    console.log("[assert] cross building");
+                    res_1.valid = false;
+                    return res_1;
                 }
-            }
-            catch (e_7_1) { e_7 = { error: e_7_1 }; }
-            finally {
-                try {
-                    if (intersectBuilding_2_1 && !intersectBuilding_2_1.done && (_a = intersectBuilding_2.return)) _a.call(intersectBuilding_2);
-                }
-                finally { if (e_7) throw e_7.error; }
-            }
+            });
             //detect road cross
             var intersectRoad = this.roadTree.colliding(rectItem);
             try {
@@ -337,23 +331,25 @@ var Basemap = /** @class */ (function () {
                     var r = item.obj;
                     if (road == r)
                         continue;
-                    if (rect.intersect(r.rect)) {
-                        res.valid = false;
+                    if (rect_1.intersect(r.rect)) {
+                        res_1.valid = false;
+                        // console.log(`road cross`)
                         // console.log(this.roadID.get(road))
-                        return res;
+                        console.log("[assert] cross road");
+                        return res_1;
                     }
                 }
             }
-            catch (e_8_1) { e_8 = { error: e_8_1 }; }
+            catch (e_7_1) { e_7 = { error: e_7_1 }; }
             finally {
                 try {
-                    if (intersectRoad_1_1 && !intersectRoad_1_1.done && (_b = intersectRoad_1.return)) _b.call(intersectRoad_1);
+                    if (intersectRoad_1_1 && !intersectRoad_1_1.done && (_a = intersectRoad_1.return)) _a.call(intersectRoad_1);
                 }
-                finally { if (e_8) throw e_8.error; }
+                finally { if (e_7) throw e_7.error; }
             }
-            return res;
+            return res_1;
         }
-        console.log("road assert:");
+        console.log("[assert] no suitable road");
         return nullval;
     };
     // selectBuilding(pt: Point): Building | null
@@ -382,6 +378,18 @@ var Basemap = /** @class */ (function () {
                 break;
             }
         }
+        var pt1 = this.edge.get(road.from);
+        var idx1 = pt1.indexOf(road);
+        pt1.splice(idx1, 1);
+        if (pt1.length == 0) {
+            this.edge.delete(road.from);
+        }
+        var pt2 = this.edge.get(road.to);
+        var idx2 = pt2.indexOf(road);
+        pt2.splice(idx2, 1);
+        if (pt2.length == 0) {
+            this.edge.delete(road.to);
+        }
         return obj;
     };
     Basemap.prototype.getBoxBuildingItems = function (pt, distOfBox) {
@@ -391,6 +399,10 @@ var Basemap = /** @class */ (function () {
             y: pt.y,
             width: distOfBox,
             height: distOfBox
+        }, function (elt1, elt2) {
+            var pt1 = new THREE.Vector2(elt1.x, elt1.y);
+            var pt2 = new THREE.Vector2(elt2.x, elt2.y);
+            return pt.distanceTo(pt2) <= distOfBox;
         });
     };
     Basemap.prototype.selectBuilding = function (pt, distOfBox) {
@@ -416,11 +428,20 @@ var Basemap = /** @class */ (function () {
     };
     Basemap.prototype.getBoxRoadItems = function (pt, distOfBox) {
         if (distOfBox === void 0) { distOfBox = def_1.defaultRoadSelectionRange; }
+        // console.log({
+        // 	x: pt.x,
+        // 	y: pt.y,
+        // 	radius: distOfBox
+        // })
         return this.roadTree.colliding({
             x: pt.x,
             y: pt.y,
             width: distOfBox,
             height: distOfBox
+        }, function (elt1, elt2) {
+            var pt1 = new THREE.Vector2(elt1.x, elt1.y);
+            var pt2 = new THREE.Vector2(elt2.x, elt2.y);
+            return pt.distanceTo(pt2) <= distOfBox;
         });
     };
     Basemap.prototype.selectRoad = function (pt) {
@@ -448,9 +469,13 @@ var Basemap = /** @class */ (function () {
         var res = undefined;
         var minDist = Infinity;
         var items = this.getBoxRoadItems(pt, distOfBox);
+        // console.log(this.roadTree)
+        // console.log("distOfBox:", distOfBox)
+        // console.log("all items:", items.length)
+        // console.log("all roads:", this.getAllRoads().length)
+        // console.log("all treeitems:", this.roadTree.find(e => true).length)
         items.forEach(function (item) {
             var road = item.obj;
-            console.log(road);
             if (road.seg.distance(pt) < minDist) {
                 var ap = pt.clone().sub(road.seg.from);
                 var bp = pt.clone().sub(road.seg.to);
@@ -496,7 +521,7 @@ var Basemap = /** @class */ (function () {
         }
     };
     Basemap.prototype.getCandidatePoint = function (pt) {
-        var e_9, _a;
+        var e_8, _a;
         var res;
         var minDist = Infinity;
         try {
@@ -509,12 +534,12 @@ var Basemap = /** @class */ (function () {
                 }
             }
         }
-        catch (e_9_1) { e_9 = { error: e_9_1 }; }
+        catch (e_8_1) { e_8 = { error: e_8_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_9) throw e_9.error; }
+            finally { if (e_8) throw e_8.error; }
         }
         return res || pt;
     };
@@ -522,7 +547,7 @@ var Basemap = /** @class */ (function () {
         return this.getNearPoints(pt);
     };
     Basemap.prototype.getNearPoints = function (pt) {
-        var e_10, _a;
+        var e_9, _a;
         var res = [];
         var rect = new geometry_1.ParallelRect2D(pt, def_1.PointDetectRadius);
         //detect road cross
@@ -537,17 +562,17 @@ var Basemap = /** @class */ (function () {
                     res.push(road.to);
             }
         }
-        catch (e_10_1) { e_10 = { error: e_10_1 }; }
+        catch (e_9_1) { e_9 = { error: e_9_1 }; }
         finally {
             try {
                 if (roads_1_1 && !roads_1_1.done && (_a = roads_1.return)) _a.call(roads_1);
             }
-            finally { if (e_10) throw e_10.error; }
+            finally { if (e_9) throw e_9.error; }
         }
         return res;
     };
     Basemap.prototype.getNearPoint = function (pt) {
-        var e_11, _a;
+        var e_10, _a;
         var res;
         var minDist = Infinity;
         try {
@@ -560,12 +585,12 @@ var Basemap = /** @class */ (function () {
                 }
             }
         }
-        catch (e_11_1) { e_11 = { error: e_11_1 }; }
+        catch (e_10_1) { e_10 = { error: e_10_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_11) throw e_11.error; }
+            finally { if (e_10) throw e_10.error; }
         }
         return res;
     };
@@ -596,6 +621,7 @@ var Basemap = /** @class */ (function () {
         // return JSON.stringify(webData, null, 4)
     };
     Basemap.count = 0;
+    Basemap.cnt = 0;
     return Basemap;
 }());
 exports.Basemap = Basemap;

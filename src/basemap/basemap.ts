@@ -1,10 +1,10 @@
-import * as THREE from "three"
 import BasemapBuildingItem from "./buildingItem";
 import { mapWidth, mapHeight, maxBuildings, maxRoads, QuadTreeItem, PointDetectRadius, AttachRadius, minRoadLength, defaultBuildingSelectionRange, defaultRoadSelectionRange } from "./def";
 import { Point, AnyRect2D, cmp, ParallelRect2D, cmpPt, cross2D, Seg2D } from "./geometry";
 import BasemapRoadItem from "./roadItem";
 import * as QuadTree from "quadtree-lib"
-import { ModelData, BuildingData, RoadData } from "../def";
+import * as THREE from "three"
+import { ModelData, RoadData, BuildingData } from "../def";
 
 type Restype<R> = {
 	road: BasemapRoadItem<R> | undefined,
@@ -188,8 +188,8 @@ class Basemap<R, B> {
 		return true
 	}
 
+	static cnt = 0
 	alignBuilding(pt: Point, placeholder: THREE.Vector2): Restype<R> {
-
 		const nullval: Restype<R> = {
 			road: undefined,
 			offset: undefined,
@@ -197,13 +197,11 @@ class Basemap<R, B> {
 			angle: 0,
 			valid: false
 		}
-		const road = this.getVerticalRoad(pt, Math.max(placeholder.width, placeholder.height) * 1.5)
-
-
+		const road = this.getVerticalRoad(pt, Math.max(placeholder.width, placeholder.height) * 5)
 		if (road) {
 
-			if (road.seg.distance(pt) > placeholder.height + road.width / 2) {
-				console.log("dist assert")
+			if (road.seg.distance(pt) > (placeholder.height / 2 + road.width / 2) * 1.1) {
+				console.log("[assert] road's distance building is too far")
 				return nullval
 			}
 
@@ -211,7 +209,7 @@ class Basemap<R, B> {
 			let AC = road.to.clone().sub(road.from)
 			let roadLength = AC.length()
 			if (roadLength < placeholder.width) {
-				console.log("road length assert")
+				console.log("[assert] road is too short")
 				return nullval
 			}
 			roadLength -= placeholder.width
@@ -222,8 +220,8 @@ class Basemap<R, B> {
 
 			//1: left, -1:right
 			let offsetSign = cross2D(AC.clone(), (AB)) > 0 ? 1 : -1
-			let offset = Math.floor(AC.dot(AB) - placeholder.width / 2) + 1
-			offset = cmp(offset, 1) < 0 ? 1 : cmp(offset, roadLength + 1) > 0 ? Math.floor(roadLength + 1) : offset
+			let offset = Math.round(AC.dot(AB) - placeholder.width / 2) + 1
+			offset = cmp(offset, 1) < 0 ? 1 : cmp(offset, roadLength + 1) > 0 ? roadLength + 1 : offset
 
 			let normDir = AC.clone().rotateAround(origin, Math.PI / 2 * offsetSign)
 			let negNormDir = normDir.clone().negate()
@@ -262,13 +260,17 @@ class Basemap<R, B> {
 			let rectItem = rect.treeItem()
 			//detect building cross
 			let intersectBuilding = this.buildingTree.colliding(rectItem)
-			for (let item of intersectBuilding) {
+			intersectBuilding.forEach(item => {
 				let building = item.obj!
 				if (building.rect.intersect(rect)) {
+					// console.log(`detect a building cross`)
+					// console.log(building.rect)
+					// console.log(rect)
+					console.log("[assert] cross building")
 					res!.valid = false
 					return res
 				}
-			}
+			})
 
 			//detect road cross
 			let intersectRoad = this.roadTree.colliding(rectItem)
@@ -277,13 +279,15 @@ class Basemap<R, B> {
 				if (road == r) continue
 				if (rect.intersect(r.rect)) {
 					res!.valid = false
+					// console.log(`road cross`)
 					// console.log(this.roadID.get(road))
+					console.log("[assert] cross road")
 					return res
 				}
 			}
 			return res
 		}
-		console.log("road assert:")
+		console.log("[assert] no suitable road")
 		return nullval
 	}
 
@@ -314,6 +318,19 @@ class Basemap<R, B> {
 				break
 			}
 		}
+
+		const pt1 = this.edge.get(road.from)
+		const idx1 = pt1.indexOf(road)
+		pt1.splice(idx1, 1)
+		if (pt1.length == 0) {
+			this.edge.delete(road.from)
+		}
+		const pt2 = this.edge.get(road.to)
+		const idx2 = pt2.indexOf(road)
+		pt2.splice(idx2, 1)
+		if (pt2.length == 0) {
+			this.edge.delete(road.to)
+		}
 		return obj
 	}
 
@@ -323,6 +340,10 @@ class Basemap<R, B> {
 			y: pt.y,
 			width: distOfBox,
 			height: distOfBox
+		}, (elt1, elt2) => {
+			const pt1 = new THREE.Vector2(elt1.x, elt1.y)
+			const pt2 = new THREE.Vector2(elt2.x, elt2.y)
+			return pt.distanceTo(pt2) <= distOfBox
 		})
 	}
 
@@ -347,11 +368,20 @@ class Basemap<R, B> {
 	}
 
 	private getBoxRoadItems(pt: Point, distOfBox: number = defaultRoadSelectionRange): QuadTreeItem<BasemapRoadItem<R>>[] {
+		// console.log({
+		// 	x: pt.x,
+		// 	y: pt.y,
+		// 	radius: distOfBox
+		// })
 		return this.roadTree.colliding({
 			x: pt.x,
 			y: pt.y,
 			width: distOfBox,
 			height: distOfBox
+		}, (elt1, elt2) => {
+			const pt1 = new THREE.Vector2(elt1.x, elt1.y)
+			const pt2 = new THREE.Vector2(elt2.x, elt2.y)
+			return pt.distanceTo(pt2) <= distOfBox
 		})
 	}
 
@@ -380,9 +410,13 @@ class Basemap<R, B> {
 		let res: BasemapRoadItem<R> = undefined
 		let minDist = Infinity
 		const items = this.getBoxRoadItems(pt, distOfBox)
+		// console.log(this.roadTree)
+		// console.log("distOfBox:", distOfBox)
+		// console.log("all items:", items.length)
+		// console.log("all roads:", this.getAllRoads().length)
+		// console.log("all treeitems:", this.roadTree.find(e => true).length)
 		items.forEach((item: QuadTreeItem<BasemapRoadItem<R>>) => {
 			let road = item.obj!
-			console.log(road)
 			if (road.seg.distance(pt) < minDist) {
 				const ap = pt.clone().sub(road.seg.from)
 				const bp = pt.clone().sub(road.seg.to)
