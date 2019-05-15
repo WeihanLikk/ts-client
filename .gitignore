@@ -1,4 +1,5 @@
-/build
-/assests/*
-/node_modules
-/.vscode
+build
+dist
+assets
+node_modules
+.vscode

@@ -200,7 +200,7 @@ class Basemap<R, B> {
 		const road = this.getVerticalRoad(pt)
 		if (road) {
 
-			if (road.seg.distance(pt) > placeholder.height) {
+			if (road.seg.distance(pt) > placeholder.height + road.width / 2) {
 				return nullval
 			}
 
@@ -218,27 +218,31 @@ class Basemap<R, B> {
 
 			//1: left, -1:right
 			let offsetSign = cross2D(AC.clone(), (AB)) > 0 ? 1 : -1
-			let offset = Math.round(AC.dot(AB) - placeholder.width / 2) + 1
-			offset = cmp(offset, 1) < 0 ? 1 : cmp(offset, roadLength + 1) > 0 ? roadLength + 1 : offset
+			let offset = Math.floor(AC.dot(AB) - placeholder.width / 2) + 1
+			offset = cmp(offset, 1) < 0 ? 1 : cmp(offset, roadLength + 1) > 0 ? Math.floor(roadLength + 1) : offset
 
 			let normDir = AC.clone().rotateAround(origin, Math.PI / 2 * offsetSign)
-			let negNormDir = origin.clone().sub(normDir)
+			let negNormDir = normDir.clone().negate()
 
 			// let angle = Math.acos(faceDir.clone().dot(negNormDir)) * -offsetSign
-			let angleSign = cmp(cross2D(negNormDir.clone(), (faceDir)), 0) > 0 ? -1 : 1
-			let angle = Math.acos(negNormDir.clone().dot(faceDir)) * angleSign
+			let angleSign = cmp(cross2D(negNormDir, faceDir), 0) > 0 ? -1 : 1
+			let angle = Math.acos(negNormDir.dot(faceDir)) * angleSign
 			let center = road.from.clone()
 				.add(AC.clone().multiplyScalar(offset - 1 + placeholder.width / 2))
 				.add(normDir.clone().multiplyScalar(placeholder.height / 2 + road.width / 2))
 
 			let rect = new AnyRect2D([
-				center.clone().add(normDir.clone().multiplyScalar(placeholder.height / 2))
+				center.clone()
+					.add(normDir.clone().multiplyScalar(placeholder.height / 2))
 					.add(AC.clone().multiplyScalar(placeholder.width / 2)),
-				center.clone().add(negNormDir.clone().multiplyScalar(placeholder.height / 2))
+				center.clone()
+					.add(negNormDir.clone().multiplyScalar(placeholder.height / 2))
 					.add(AC.clone().multiplyScalar(placeholder.width / 2)),
-				center.clone().add(negNormDir.clone().multiplyScalar(placeholder.height / 2))
+				center.clone()
+					.add(negNormDir.clone().multiplyScalar(placeholder.height / 2))
 					.sub(AC.clone().multiplyScalar(placeholder.width / 2)),
-				center.clone().add(normDir.clone().multiplyScalar(placeholder.height / 2))
+				center.clone()
+					.add(normDir.clone().multiplyScalar(placeholder.height / 2))
 					.sub(AC.clone().multiplyScalar(placeholder.width / 2)),
 			])
 
