@@ -450,6 +450,7 @@ var Basemap = /** @class */ (function () {
         var items = this.getBoxRoadItems(pt, distOfBox);
         items.forEach(function (item) {
             var road = item.obj;
+            console.log(road);
             if (road.seg.distance(pt) < minDist) {
                 var ap = pt.clone().sub(road.seg.from);
                 var bp = pt.clone().sub(road.seg.to);
