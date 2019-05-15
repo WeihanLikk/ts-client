@@ -260,7 +260,7 @@ var Basemap = /** @class */ (function () {
         };
         var road = this.getVerticalRoad(pt);
         if (road) {
-            if (road.seg.distance(pt) > placeholder.height) {
+            if (road.seg.distance(pt) > placeholder.height + road.width / 2) {
                 return nullval;
             }
             var AB = pt.clone().sub(road.from);
@@ -275,24 +275,28 @@ var Basemap = /** @class */ (function () {
             var faceDir = new THREE.Vector2(0, -1);
             //1: left, -1:right
             var offsetSign = geometry_1.cross2D(AC.clone(), (AB)) > 0 ? 1 : -1;
-            var offset = Math.round(AC.dot(AB) - placeholder.width / 2) + 1;
-            offset = geometry_1.cmp(offset, 1) < 0 ? 1 : geometry_1.cmp(offset, roadLength + 1) > 0 ? roadLength + 1 : offset;
+            var offset = Math.floor(AC.dot(AB) - placeholder.width / 2) + 1;
+            offset = geometry_1.cmp(offset, 1) < 0 ? 1 : geometry_1.cmp(offset, roadLength + 1) > 0 ? Math.floor(roadLength + 1) : offset;
             var normDir = AC.clone().rotateAround(origin_1, Math.PI / 2 * offsetSign);
-            var negNormDir = origin_1.clone().sub(normDir);
+            var negNormDir = normDir.clone().negate();
             // let angle = Math.acos(faceDir.clone().dot(negNormDir)) * -offsetSign
-            var angleSign = geometry_1.cmp(geometry_1.cross2D(negNormDir.clone(), (faceDir)), 0) > 0 ? -1 : 1;
-            var angle = Math.acos(negNormDir.clone().dot(faceDir)) * angleSign;
+            var angleSign = geometry_1.cmp(geometry_1.cross2D(negNormDir, faceDir), 0) > 0 ? -1 : 1;
+            var angle = Math.acos(negNormDir.dot(faceDir)) * angleSign;
             var center = road.from.clone()
                 .add(AC.clone().multiplyScalar(offset - 1 + placeholder.width / 2))
                 .add(normDir.clone().multiplyScalar(placeholder.height / 2 + road.width / 2));
             var rect = new geometry_1.AnyRect2D([
-                center.clone().add(normDir.clone().multiplyScalar(placeholder.height / 2))
+                center.clone()
+                    .add(normDir.clone().multiplyScalar(placeholder.height / 2))
                     .add(AC.clone().multiplyScalar(placeholder.width / 2)),
-                center.clone().add(negNormDir.clone().multiplyScalar(placeholder.height / 2))
+                center.clone()
+                    .add(negNormDir.clone().multiplyScalar(placeholder.height / 2))
                     .add(AC.clone().multiplyScalar(placeholder.width / 2)),
-                center.clone().add(negNormDir.clone().multiplyScalar(placeholder.height / 2))
+                center.clone()
+                    .add(negNormDir.clone().multiplyScalar(placeholder.height / 2))
                     .sub(AC.clone().multiplyScalar(placeholder.width / 2)),
-                center.clone().add(normDir.clone().multiplyScalar(placeholder.height / 2))
+                center.clone()
+                    .add(normDir.clone().multiplyScalar(placeholder.height / 2))
                     .sub(AC.clone().multiplyScalar(placeholder.width / 2)),
             ]);
             offset *= offsetSign;
