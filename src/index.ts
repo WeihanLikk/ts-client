@@ -88,17 +88,17 @@ class WebSocket {
                                 }
                                 else if (buildings.length != 0) {
                                     const { prototype, center } = buildings[0]
+                                    const pos = new THREE.Vector2(center.x, center.y)
                                     if (state == "insert") {
                                         const proto = manager.get(prototype)
-                                        const pos = new THREE.Vector2(center.x, center.y)
                                         const modelInfo = basemap.alignBuilding(pos, proto.placeholder)
                                         const { road, angle, valid, offset } = modelInfo
                                         console.log("road", road)
-                                        if (valid) basemap.addBuilding(new BasemapBuildingItem(proto, center, angle, road, offset))
+                                        if (valid) basemap.addBuilding(new BasemapBuildingItem(proto, pos, angle, road, offset))
                                         resolve(valid)
                                     }
                                     else if (state == "remove") {
-                                        const building = basemap.selectBuilding(center)
+                                        const building = basemap.selectBuilding(pos)
                                         if (building) {
                                             basemap.removeBuilding(building)
                                             resolve(true)
