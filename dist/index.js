@@ -160,5 +160,6 @@ manager.load([
     "export/Building_Super Market"
 ]).then(function () {
     var ws = new WebSocket("47.98.213.238", 8899);
+    // const ws = new WebSocket("localhost", 8899)
 });
 //# sourceMappingURL=index.js.map

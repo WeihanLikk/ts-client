@@ -394,15 +394,21 @@ var Basemap = /** @class */ (function () {
     };
     Basemap.prototype.getBoxBuildingItems = function (pt, distOfBox) {
         if (distOfBox === void 0) { distOfBox = def_1.defaultBuildingSelectionRange; }
+        // return this.buildingTree.colliding({
+        // 	x: pt.x,
+        // 	y: pt.y,
+        // 	width: distOfBox,
+        // 	height: distOfBox
+        // }, (elt1, elt2) => {
+        // 	const pt1 = new THREE.Vector2(elt1.x, elt1.y)
+        // 	const pt2 = new THREE.Vector2(elt2.x, elt2.y)
+        // 	return pt.distanceTo(pt2) <= distOfBox
+        // })
         return this.buildingTree.colliding({
             x: pt.x,
             y: pt.y,
-            width: distOfBox,
-            height: distOfBox
-        }, function (elt1, elt2) {
-            var pt1 = new THREE.Vector2(elt1.x, elt1.y);
-            var pt2 = new THREE.Vector2(elt2.x, elt2.y);
-            return pt.distanceTo(pt2) <= distOfBox;
+            width: distOfBox * 2,
+            height: distOfBox * 2
         });
     };
     Basemap.prototype.selectBuilding = function (pt, distOfBox) {
