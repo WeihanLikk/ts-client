@@ -87,7 +87,7 @@ var WebSocket = /** @class */ (function () {
                                     if (state == "insert") {
                                         var modelInfo = basemap.alignBuilding(pos.clone(), proto.placeholder);
                                         var road = modelInfo.road, angle = modelInfo.angle, valid = modelInfo.valid, offset = modelInfo.offset;
-                                        console.log("insert res", road, angle, valid, offset);
+                                        console.log("[insert result]", road, angle, valid, offset);
                                         if (valid)
                                             basemap.addBuilding(new buildingItem_1.default(proto, pos, angle, road, offset));
                                         resolve(valid);

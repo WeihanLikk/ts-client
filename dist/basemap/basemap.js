@@ -15,6 +15,7 @@ var geometry_1 = require("./geometry");
 var roadItem_1 = require("./roadItem");
 var QuadTree = require("quadtree-lib");
 var THREE = require("three");
+var three_1 = require("three");
 var Basemap = /** @class */ (function () {
     function Basemap() {
         this.roadID = new Map();
@@ -169,7 +170,7 @@ var Basemap = /** @class */ (function () {
         return res;
     };
     Basemap.prototype.addBuilding = function (building) {
-        this.buildingTree.push(building.quadTreeItem);
+        this.buildingTree.push(building.quadTreeItem, true);
     };
     Basemap.prototype.alignRoad = function (road, lengthAssert) {
         if (lengthAssert === void 0) { lengthAssert = true; }
@@ -259,7 +260,7 @@ var Basemap = /** @class */ (function () {
             valid: false
         };
         var road = this.getVerticalRoad(pt, Math.max(placeholder.width, placeholder.height) * 5);
-        if (road) {
+        if (road != undefined) {
             if (road.seg.distance(pt) > (placeholder.height / 2 + road.width / 2) * 1.1) {
                 console.log("[assert] road's distance building is too far");
                 return nullval;
@@ -439,16 +440,28 @@ var Basemap = /** @class */ (function () {
         // 	y: pt.y,
         // 	radius: distOfBox
         // })
+        // console.log(distOfBox)
         return this.roadTree.colliding({
             x: pt.x,
             y: pt.y,
             width: distOfBox,
             height: distOfBox
         }, function (elt1, elt2) {
-            var pt1 = new THREE.Vector2(elt1.x, elt1.y);
-            var pt2 = new THREE.Vector2(elt2.x, elt2.y);
-            return pt.distanceTo(pt2) <= distOfBox;
+            var box1 = new three_1.Box2(new three_1.Vector2(elt1.x - elt1.width / 2, elt1.y - elt1.height / 2), new three_1.Vector2(elt1.x + elt1.width / 2, elt1.y + elt1.height / 2));
+            var box2 = new three_1.Box2(new three_1.Vector2(elt2.x - elt2.width / 2, elt2.y - elt2.height / 2), new three_1.Vector2(elt2.x + elt2.width / 2, elt2.y + elt2.height / 2));
+            return box1.intersectsBox(box2);
         });
+        // this.roadTree.
+        // return this.roadTree.colliding({
+        // 	x: pt.x,
+        // 	y: pt.y,
+        // 	width: distOfBox,
+        // 	height: distOfBox
+        // }, (elt1, elt2) => {
+        // 	const pt1 = new THREE.Vector2(elt1.x, elt1.y)
+        // 	const pt2 = new THREE.Vector2(elt2.x, elt2.y)
+        // 	return pt1.distanceTo(pt2) >= distOfBox
+        // })
     };
     Basemap.prototype.selectRoad = function (pt) {
         var res = this.getVerticalRoad(pt);
@@ -478,7 +491,8 @@ var Basemap = /** @class */ (function () {
         // console.log(this.roadTree)
         // console.log("distOfBox:", distOfBox)
         // console.log("all items:", items.length)
-        // console.log("all roads:", this.getAllRoads().length)
+        // console.log("all road nums:", this.getAllRoads.length)
+        // // this.getAllRoads().forEach(road => console.log(road))
         // console.log("all treeitems:", this.roadTree.find(e => true).length)
         items.forEach(function (item) {
             var road = item.obj;
@@ -500,7 +514,7 @@ var Basemap = /** @class */ (function () {
         if (near && near.distanceTo(pt) <= def_1.AttachRadius)
             return near;
         else {
-            var road = this.getVerticalRoad(pt, def_1.AttachRadius);
+            var road = this.getVerticalRoad(pt, 2 * def_1.AttachRadius);
             if (road == undefined)
                 return pt;
             var nearPt = pt.clone();
