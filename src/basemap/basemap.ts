@@ -5,6 +5,7 @@ import BasemapRoadItem from "./roadItem";
 import * as QuadTree from "quadtree-lib"
 import * as THREE from "three"
 import { ModelData, RoadData, BuildingData } from "../def";
+import { Box2, Vector2 } from "three";
 
 type Restype<R> = {
 	road: BasemapRoadItem<R> | undefined,
@@ -132,7 +133,7 @@ class Basemap<R, B> {
 	}
 
 	addBuilding(building: BasemapBuildingItem<B>) {
-		this.buildingTree.push(building.quadTreeItem)
+		this.buildingTree.push(building.quadTreeItem, true)
 	}
 
 	alignRoad(road: BasemapRoadItem<R>, lengthAssert: boolean = true): boolean {
@@ -198,7 +199,7 @@ class Basemap<R, B> {
 			valid: false
 		}
 		const road = this.getVerticalRoad(pt, Math.max(placeholder.width, placeholder.height) * 5)
-		if (road) {
+		if (road != undefined) {
 
 			if (road.seg.distance(pt) > (placeholder.height / 2 + road.width / 2) * 1.1) {
 				console.log("[assert] road's distance building is too far")
@@ -379,12 +380,18 @@ class Basemap<R, B> {
 		// 	y: pt.y,
 		// 	radius: distOfBox
 		// })
+		// console.log(distOfBox)
 		return this.roadTree.colliding({
 			x: pt.x,
 			y: pt.y,
 			width: distOfBox,
 			height: distOfBox
+		}, (elt1, elt2) => {
+			const box1 = new Box2(new Vector2(elt1.x - elt1.width / 2, elt1.y - elt1.height / 2), new Vector2(elt1.x + elt1.width / 2, elt1.y + elt1.height / 2))
+			const box2 = new Box2(new Vector2(elt2.x - elt2.width / 2, elt2.y - elt2.height / 2), new Vector2(elt2.x + elt2.width / 2, elt2.y + elt2.height / 2))
+			return box1.intersectsBox(box2)
 		})
+		// this.roadTree.
 		// return this.roadTree.colliding({
 		// 	x: pt.x,
 		// 	y: pt.y,
@@ -425,7 +432,8 @@ class Basemap<R, B> {
 		// console.log(this.roadTree)
 		// console.log("distOfBox:", distOfBox)
 		// console.log("all items:", items.length)
-		// console.log("all roads:", this.getAllRoads().length)
+		// console.log("all road nums:", this.getAllRoads.length)
+		// // this.getAllRoads().forEach(road => console.log(road))
 		// console.log("all treeitems:", this.roadTree.find(e => true).length)
 		items.forEach((item: QuadTreeItem<BasemapRoadItem<R>>) => {
 			let road = item.obj!
@@ -447,7 +455,7 @@ class Basemap<R, B> {
 		const near = this.getCandidatePoint(pt)
 		if (near && near.distanceTo(pt) <= AttachRadius) return near
 		else {
-			const road = this.getVerticalRoad(pt, AttachRadius)
+			const road = this.getVerticalRoad(pt, 2 * AttachRadius)
 			if (road == undefined) return pt
 
 			const nearPt = pt.clone()
