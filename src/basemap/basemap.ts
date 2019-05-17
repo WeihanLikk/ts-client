@@ -335,15 +335,21 @@ class Basemap<R, B> {
 	}
 
 	private getBoxBuildingItems(pt: Point, distOfBox: number = defaultBuildingSelectionRange): QuadTreeItem<BasemapBuildingItem<B>>[] {
+		// return this.buildingTree.colliding({
+		// 	x: pt.x,
+		// 	y: pt.y,
+		// 	width: distOfBox,
+		// 	height: distOfBox
+		// }, (elt1, elt2) => {
+		// 	const pt1 = new THREE.Vector2(elt1.x, elt1.y)
+		// 	const pt2 = new THREE.Vector2(elt2.x, elt2.y)
+		// 	return pt.distanceTo(pt2) <= distOfBox
+		// })
 		return this.buildingTree.colliding({
 			x: pt.x,
 			y: pt.y,
-			width: distOfBox,
-			height: distOfBox
-		}, (elt1, elt2) => {
-			const pt1 = new THREE.Vector2(elt1.x, elt1.y)
-			const pt2 = new THREE.Vector2(elt2.x, elt2.y)
-			return pt.distanceTo(pt2) <= distOfBox
+			width: distOfBox * 2,
+			height: distOfBox * 2
 		})
 	}
 
@@ -381,7 +387,7 @@ class Basemap<R, B> {
 		}, (elt1, elt2) => {
 			const pt1 = new THREE.Vector2(elt1.x, elt1.y)
 			const pt2 = new THREE.Vector2(elt2.x, elt2.y)
-			return pt.distanceTo(pt2) <= distOfBox
+			return pt1.distanceTo(pt2) <= distOfBox
 		})
 	}
 
