@@ -63,7 +63,7 @@ class Basemap<R, B> {
 				// let tes = { from: c, to: d, crossPoint: crossPt }
 
 				//if the cross point is not C or D
-				if (!crossPt.equals(c) && !crossPt.equals(d)) {
+				if (!cmpPt(crossPt, c) && !cmpPt(crossPt, d)) {
 					// this.removeRoad(road)
 					res.removed.push(road)
 					tempRoad.push(new BasemapRoadItem<R>(road.width, c, crossPt))
@@ -72,7 +72,7 @@ class Basemap<R, B> {
 				//otherwise, if cross point is C or D, nothing to do with line CD
 
 				//if new this.RoadType is not segmented
-				if (crossPt.equals(from) || crossPt.equals(to)) continue
+				if (cmpPt(crossPt, from) || !cmpPt(crossPt, to)) continue
 				segPts.push(crossPt)
 			}
 		}
